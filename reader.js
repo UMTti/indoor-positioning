@@ -4,7 +4,8 @@ const scanner = require('node-wifi-scanner');
 var MongoClient = require('mongodb').MongoClient
  , assert = require('assert');
 
-var url = 'mongodb://gurulansaoyab:navettamme@ds147537.mlab.com:47537/indoor-loc-training-data';
+const MONGO_PASSWORD = process.env['MONGO_PASSWORD'];
+var url = `mongodb://gurulansaoyab:${MONGO_PASSWORD}@ds147537.mlab.com:47537/indoor-loc-training-data`;
 
 var list = ["Gurula", "Navetta", "Haxxo"];
 console.log("Give place where you are from this list: " + list);
@@ -32,7 +33,16 @@ stdin.addListener("data", function(d) {
         return;
       }
       console.log(networks);
-      sendData({location: d.toString().split("\n")[0], networks: networks});
+      var i = 0;
+      var timeout = setInterval(function(){
+        if(i == 10) {
+          clearInterval(timeout);
+          console.log("ready");
+        } else {
+          sendData({location: d.toString().split("\n")[0], networks: networks});
+          i++;
+        }
+      }, 5000);
     });
-
+    return;
 });
