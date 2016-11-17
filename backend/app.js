@@ -3,6 +3,10 @@ var _ = require('lodash')
 var app = express()
 var MongoClient = require('mongodb').MongoClient
  , assert = require('assert');
+ var bodyParser = require('body-parser')
+
+ app.use(bodyParser.json());
+ app.use(bodyParser.urlencoded({extended: true}));
 
  const MONGO_PASSWORD = process.env['MONGO_PASSWORD'];
  var url = `mongodb://gurulansaoyab:${MONGO_PASSWORD}@ds147537.mlab.com:47537/indoor-loc-training-data`;
@@ -61,6 +65,53 @@ app.get('/readings', function (req, res) {
 
     db.collection('readings').find().toArray((err, docs) => {
       res.json(getAverages(docs));
+      db.close();
+    })
+  });
+
+})
+
+function fillMissingValues(readings){
+  let aps = _.uniq(_.flatten(readings.map((r) => {
+    return r.networks.map(n => n.mac)
+  })));
+  readings.forEach((r) => {
+    let nAps = r.networks.map(n => n.mac)
+    let notFound = aps.filter(ap => nAps.indexOf(ap) === -1)
+    notFound.forEach((nF) => {
+      r.networks.push({"mac": nF, "rssi": -100})
+    })
+  })
+  return readings;
+}
+
+function calcEuclideanDistance(reading, userReadings){
+  var distance = 0;
+  userReadings.forEach((uR) => {
+    let pair = reading.networks.find((n) => uR.mac === n.mac))
+    if(pair !== undefined) {
+      distance += Math.pow(uR.rssi - pair.rssi, 2)
+    }
+  })
+  reading.distance = Math.sqrt(distance);
+}
+
+function findNearestNeighbors(k, readings, userReadings){
+  readings.forEach((r) => {
+    calcEuclideanDistance(r, userReadings);
+  })
+  let sorted = _.sortBy(readings, [function(r) { return r.distance; }]);
+  return sorted.slice(0, k);
+}
+
+app.post('/location', function (req, res) {
+  MongoClient.connect(url, function(err, db) {
+    assert.equal(null, err);
+
+    db.collection('readings').find().toArray((err, readings) => {
+      fillMissingValues(readings);
+      let userReadings = req.body.readings;
+      res.json(findNearestNeighbors(5, readings, userReadings));
       db.close();
     })
   });
