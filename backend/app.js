@@ -87,8 +87,8 @@ function fillMissingValues(readings){
 
 function calcEuclideanDistance(reading, userReadings){
   var distance = 0;
-  userReadings.forEach((uR) => {
-    let pair = reading.networks.find((n) => uR.mac === n.mac))
+  userReadings.networks.forEach((uR) => {
+    let pair = reading.networks.find((n) => uR.mac === n.mac)
     if(pair !== undefined) {
       distance += Math.pow(uR.rssi - pair.rssi, 2)
     }
@@ -104,14 +104,38 @@ function findNearestNeighbors(k, readings, userReadings){
   return sorted.slice(0, k);
 }
 
+function mostCommonLocation(nearest){
+  let freqs = nearest.reduce((memo, current) => {
+    if(memo.has(current.location)){
+      memo.set(current.location, memo.get(current.location) + 1);
+    } else {
+      memo.set(current.location, 1)
+    }
+    return memo
+  }, new Map());
+  console.log(freqs);
+  var biggest = -1;
+  var location = "";
+  for(var key of freqs.keys()){
+    if(freqs.get(key) > biggest){
+      biggest = freqs.get(key);
+      location = key;
+    }
+  }
+  return location;
+}
+
 app.post('/location', function (req, res) {
   MongoClient.connect(url, function(err, db) {
     assert.equal(null, err);
 
     db.collection('readings').find().toArray((err, readings) => {
       fillMissingValues(readings);
-      let userReadings = req.body.readings;
-      res.json(findNearestNeighbors(5, readings, userReadings));
+      let userReadings = req.body;
+      console.log(req.body);
+      let nearest = findNearestNeighbors(5, readings, userReadings);
+      res.json(mostCommonLocation(nearest));
+      //res.json(findNearestNeighbors(5, readings, userReadings));
       db.close();
     })
   });
