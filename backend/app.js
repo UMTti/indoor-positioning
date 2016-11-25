@@ -75,7 +75,8 @@ var io = require('socket.io').listen(server);
 io.on('connection', function(socket){
   console.log('a user connected');
   socket.on('locationUpdate', function (msg) {
-    locations[msg.nickname] = msg.location;
+    msg.timestamp = new Date().toString();
+    locations.push(msg);
     console.log(msg);
   });
   socket.emit('users', locations);
