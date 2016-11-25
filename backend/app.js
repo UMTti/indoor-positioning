@@ -7,6 +7,7 @@ var MongoClient = require('mongodb').MongoClient
 
 var averages = require('./averages.js')
 var knearest = require('./knearestneighbors.js')
+var readings = require('./readings.js')
 
  app.use(bodyParser.json());
  app.use(bodyParser.urlencoded({extended: true}));
@@ -15,15 +16,9 @@ var knearest = require('./knearestneighbors.js')
  var url = `mongodb://gurulansaoyab:${MONGO_PASSWORD}@ds147537.mlab.com:47537/indoor-loc-training-data`;
 
 app.get('/readings', function (req, res) {
-  MongoClient.connect(url, function(err, db) {
-    assert.equal(null, err);
-
-    db.collection('readings').find().toArray((err, docs) => {
-      res.json(averages.getAverages(docs));
-      db.close();
-    })
+  readings.getReadings().then( function(readings){
+    res.json(averages.getAverages(readings));
   });
-
 })
 
 function mostCommonLocation(nearest){
@@ -48,20 +43,13 @@ function mostCommonLocation(nearest){
 }
 
 app.post('/location', function (req, res) {
-  MongoClient.connect(url, function(err, db) {
-    assert.equal(null, err);
-
-    db.collection('readings').find().toArray((err, readings) => {
-      knearest.fillMissingValues(readings);
-      let userReadings = req.body;
-      console.log(req.body);
-      let nearest = knearest.findNearestNeighbors(5, readings, userReadings);
-      res.json(mostCommonLocation(nearest));
-      //res.json(findNearestNeighbors(5, readings, userReadings));
-      db.close();
-    })
+  readings.getReadings().then( function(readings){
+    knearest.fillMissingValues(readings);
+    let userReadings = req.body;
+    console.log(req.body);
+    let nearest = knearest.findNearestNeighbors(5, readings, userReadings);
+    res.json(mostCommonLocation(nearest));
   });
-
 })
 
 app.listen(3000, function () {
