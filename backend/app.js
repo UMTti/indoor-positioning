@@ -5,12 +5,21 @@ var MongoClient = require('mongodb').MongoClient
  , assert = require('assert');
  var bodyParser = require('body-parser')
 
+ var http = require('http').Server(app);
+ var io = require('socket.io')(http);
+
 var averages = require('./averages.js')
 var knearest = require('./knearestneighbors.js')
 var readings = require('./readings.js')
 
  app.use(bodyParser.json());
  app.use(bodyParser.urlencoded({extended: true}));
+
+ app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 
  const MONGO_PASSWORD = process.env['MONGO_PASSWORD'];
  var url = `mongodb://gurulansaoyab:${MONGO_PASSWORD}@ds147537.mlab.com:47537/indoor-loc-training-data`;
@@ -55,3 +64,10 @@ app.post('/location', function (req, res) {
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!')
 })
+
+io.on('connection', function(socket){
+  console.log('a user connected');
+  socket.on('disconnect', function(){
+    console.log('user disconnected');
+  });
+});
