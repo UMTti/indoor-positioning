@@ -14,6 +14,8 @@ var averages = require('./averages.js')
 var knearest = require('./knearestneighbors.js')
 var readings = require('./readings.js')
 
+var locations = {};
+
  app.use(bodyParser.json());
  app.use(bodyParser.urlencoded({extended: true}));
 
@@ -72,6 +74,10 @@ var io = require('socket.io').listen(server);
 
 io.on('connection', function(socket){
   console.log('a user connected');
+  socket.on('locationUpdate', function (msg) {
+    console.log(msg);
+  });
+  socket.emit('users', locations);
   socket.on('disconnect', function(){
     console.log('user disconnected');
   });
