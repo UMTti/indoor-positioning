@@ -60,7 +60,7 @@ app.post('/location', function (req, res) {
   readings.getReadings().then( function(readings){
     knearest.fillMissingValues(readings);
     let userReadings = req.body;
-    console.log(req.body);
+    //console.log(req.body);
     let nearest = knearest.findNearestNeighbors(5, readings, userReadings);
     res.json(mostCommonLocation(nearest));
   });
