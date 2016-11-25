@@ -72,6 +72,10 @@ var server = app.listen(3000, function () {
 
 var io = require('socket.io').listen(server);
 
+function modifyLocations(){
+
+}
+
 io.on('connection', function(socket){
   console.log('a user connected');
   socket.on('locationUpdate', function (msg) {
@@ -86,8 +90,8 @@ io.on('connection', function(socket){
     });
     if(!wasFound) locations.push(msg);
     console.log(msg);
+    io.emit('users', locations);
   });
-  socket.emit('users', locations);
   socket.on('disconnect', function(){
     console.log('user disconnected');
   });
