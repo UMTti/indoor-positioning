@@ -15,7 +15,7 @@ function sendData(data){
     assert.equal(null, err);
     console.log("Connected correctly to server");
 
-  // Insert a single document
+    // Insert a single document
     db.collection('readings').insertOne(data, function(err, r) {
       console.log("data sent");
       db.close();
