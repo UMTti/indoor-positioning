@@ -6,7 +6,7 @@ var MongoClient = require('mongodb').MongoClient
  var bodyParser = require('body-parser')
 
  var http = require('http').Server(app);
- var io = require('socket.io')(http);
+ var io = require('socket.io')(http, {origins: 'http://localhost:*'});
 
 var averages = require('./averages.js')
 var knearest = require('./knearestneighbors.js')
