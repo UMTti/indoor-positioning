@@ -14,7 +14,7 @@ var averages = require('./averages.js')
 var knearest = require('./knearestneighbors.js')
 var readings = require('./readings.js')
 
-var locations = {};
+var locations = [];
 
  app.use(bodyParser.json());
  app.use(bodyParser.urlencoded({extended: true}));
@@ -76,7 +76,15 @@ io.on('connection', function(socket){
   console.log('a user connected');
   socket.on('locationUpdate', function (msg) {
     msg.timestamp = new Date().toString();
-    locations.push(msg);
+    let wasFound = false;
+    locations.forEach((u) =>{
+      if(u.nickname === msg.nickname){
+        u.location = msg.location;
+        u.timestamp = msg.timestamp;
+        wasFound = true;
+      }
+    });
+    if(!wasFound) locations.push(msg);
     console.log(msg);
   });
   socket.emit('users', locations);
