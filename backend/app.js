@@ -5,8 +5,10 @@ var MongoClient = require('mongodb').MongoClient
  , assert = require('assert');
  var bodyParser = require('body-parser')
 
- var http = require('http').Server(app);
- var io = require('socket.io')(http, {origins: 'http://localhost:*'});
+var http = require('http').Server(app);
+//var io = require('socket.io')(http);
+
+// io.set('origins', 'http://localhost:3000');
 
 var averages = require('./averages.js')
 var knearest = require('./knearestneighbors.js')
@@ -16,7 +18,8 @@ var readings = require('./readings.js')
  app.use(bodyParser.urlencoded({extended: true}));
 
  app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+  res.header("Access-Control-Allow-Credentials", true);
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 });
@@ -61,9 +64,11 @@ app.post('/location', function (req, res) {
   });
 })
 
-app.listen(3000, function () {
+var server = app.listen(3000, function () {
   console.log('Example app listening on port 3000!')
-})
+});
+
+var io = require('socket.io').listen(server);
 
 io.on('connection', function(socket){
   console.log('a user connected');
