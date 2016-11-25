@@ -126,6 +126,8 @@ function mostCommonLocation(nearest){
 }
 
 app.post('/location', function (req, res) {
+  console.log(MONGO_PASSWORD);
+  console.log("moi");
   MongoClient.connect(url, function(err, db) {
     assert.equal(null, err);
 
