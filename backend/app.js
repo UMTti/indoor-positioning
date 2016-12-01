@@ -14,6 +14,8 @@ var averages = require('./averages.js')
 var knearest = require('./knearestneighbors.js')
 var readings = require('./readings.js')
 
+var locations = [];
+
  app.use(bodyParser.json());
  app.use(bodyParser.urlencoded({extended: true}));
 
@@ -58,7 +60,7 @@ app.post('/location', function (req, res) {
   readings.getReadings().then( function(readings){
     knearest.fillMissingValues(readings);
     let userReadings = req.body;
-    console.log(req.body);
+    //console.log(req.body);
     let nearest = knearest.findNearestNeighbors(5, readings, userReadings);
     res.json(mostCommonLocation(nearest));
   });
@@ -70,8 +72,26 @@ var server = app.listen(3000, function () {
 
 var io = require('socket.io').listen(server);
 
+function modifyLocations(){
+
+}
+
 io.on('connection', function(socket){
   console.log('a user connected');
+  socket.on('locationUpdate', function (msg) {
+    msg.timestamp = new Date().toString();
+    let wasFound = false;
+    locations.forEach((u) =>{
+      if(u.nickname === msg.nickname){
+        u.location = msg.location;
+        u.timestamp = msg.timestamp;
+        wasFound = true;
+      }
+    });
+    if(!wasFound) locations.push(msg);
+    console.log(msg);
+    io.emit('users', locations);
+  });
   socket.on('disconnect', function(){
     console.log('user disconnected');
   });
