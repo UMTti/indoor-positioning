@@ -66,8 +66,20 @@ app.post('/location', function (req, res) {
   });
 })
 
+function removeOldLocations(){
+  locations = locations.filter((l) => {
+    if(new Date() - new Date(l.timestamp) > 12){
+      console.log("Poistettiin yksi location");
+      return false;
+    } else {
+      return true;
+    }
+  })
+}
+
 var server = app.listen(3000, function () {
   console.log('Example app listening on port 3000!')
+  setInterval(removeOldLocations, 1000*10);
 });
 
 var io = require('socket.io').listen(server);
