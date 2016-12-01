@@ -1,2 +1,3 @@
 node_modules
 eXakt-darwin-x64
+*.app/*
