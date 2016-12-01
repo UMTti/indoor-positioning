@@ -38,7 +38,7 @@
     <h1 class="header center blue-text text-darken-3">eXakt Lokator</h1>
     <h2 class="center blue-text text-lighten-3" id="welcome"></h2>
 
-    <h3>Other people using eXakt Lokator</h3>
+    <h3>Other people using eXakt Lokator today</h3>
 
     <ul class="collection" id="user-list">
     </ul>
@@ -62,7 +62,8 @@
       users.forEach(function(user) {
         let item = document.createElement('li');
         item.className = 'collection-item';
-        item.innerHTML = `${user.nickname} spotted at ${user.location}, ${user.timestamp}`
+        let date = new Date(user.timestamp);
+        item.innerHTML = `${user.nickname} spotted at ${user.location}, ${date.toLocaleString().split(",")[1]}`
         document.querySelector('#user-list').appendChild(item);
       });
       console.log(users);
