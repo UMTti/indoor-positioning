@@ -62,8 +62,8 @@ app.post('/location', function (req, res) {
   });
 })
 
-var server = app.listen(3001, function () {
-  console.log('Example app listening on port 3001!')
+var server = app.listen(3000, function () {
+  console.log('Example app listening on port 3000!')
   setInterval(removeOldLocations, 1000*60*10);
 });
 
