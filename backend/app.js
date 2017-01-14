@@ -6,9 +6,6 @@ var MongoClient = require('mongodb').MongoClient
  var bodyParser = require('body-parser')
 
 var http = require('http').Server(app);
-//var io = require('socket.io')(http);
-
-// io.set('origins', 'http://localhost:3000');
 
 var averages = require('./averages.js')
 var knearest = require('./knearestneighbors.js')
@@ -60,26 +57,26 @@ app.post('/location', function (req, res) {
   readings.getReadings().then( function(readings){
     knearest.fillMissingValues(readings);
     let userReadings = req.body;
-    //console.log(req.body);
     let nearest = knearest.findNearestNeighbors(5, readings, userReadings);
     res.json(mostCommonLocation(nearest));
   });
 })
 
-var server = app.listen(3000, function () {
-  console.log('Example app listening on port 3000!')
+var server = app.listen(3001, function () {
+  console.log('Example app listening on port 3001!')
   setInterval(removeOldLocations, 1000*60*10);
 });
 
 var io = require('socket.io').listen(server);
 
-function modifyLocations(){
-
-}
+let userSockets = {}
 
 io.on('connection', function(socket){
   console.log('a user connected');
   socket.on('locationUpdate', function (msg) {
+
+    if (!userSockets[msg.nickname]) userSockets[msg.nickname] = socket;
+
     msg.timestamp = new Date().toString();
     let wasFound = false;
     locations.forEach((u) =>{
@@ -96,6 +93,10 @@ io.on('connection', function(socket){
   socket.on('disconnect', function(){
     console.log('user disconnected');
   });
+
+  socket.on('messageTo', (msg) => {
+    userSockets[msg.recipient].emit('receiveMsg', msg)
+  })
 });
 
 function removeOldLocations(){

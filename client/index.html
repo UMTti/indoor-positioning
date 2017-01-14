@@ -16,6 +16,10 @@
     #post-login {
       display: none;
     }
+
+    .collection-item button {
+      float: right;
+    }
   </style>
 </head>
 
@@ -38,6 +42,14 @@
     <h1 class="header center blue-text text-darken-3">eXakt Lokator</h1>
     <h2 class="center blue-text text-lighten-3" id="welcome"></h2>
 
+    <div>
+      <ul id="inbound-msgs">
+      </ul>
+    </div>
+
+    <div id="textarea-wrapper">
+    </div>
+
     <h3>Other people using eXakt Lokator today</h3>
 
     <ul class="collection" id="user-list">
@@ -48,8 +60,38 @@
 
 
   <script>
-    var socket = io.connect("http://52.211.244.135:3000");
+    // var socket = io.connect("http://52.211.244.135:3000");
+    var socket = io.connect("http://localhost:3001");
     var users = [];
+
+    function createMessageButton(t, fn) {
+      let btn = document.createElement('button')
+      btn.innerHTML = t
+      btn.onclick = fn
+      return btn
+    }
+
+    function displayMessageArea(recipient) {
+      let ta = document.createElement('textarea')
+      ta.setAttribute('id', 'msg-area')
+      ta.setAttribute('placeholder', `Write a message to ${recipient}`)
+      let taBtn = createMessageButton('Send', (e) => {
+        let text = ta.value
+        socket.emit('messageTo', {sender: nameService.getName(),recipient: recipient, text: text})
+        ta.parentNode.removeChild(ta)
+        taBtn.parentNode.removeChild(taBtn)
+        console.log(`Sendan msg: ${text} to ${recipient}`)
+      })
+      document.getElementById('textarea-wrapper').appendChild(ta)
+      document.getElementById('textarea-wrapper').appendChild(taBtn)
+    }
+
+    socket.on('receiveMsg', (msg) => {
+      let list = document.getElementById('inbound-msgs')
+      let msgItem = document.createElement('li')
+      msgItem.innerHTML = `(${new Date().toLocaleTimeString()}) ${msg.sender}: ${msg.text}`
+      list.appendChild(msgItem)
+    })
 
     socket.on('users', function(socketUsers) {
       console.log('server gave deez usrs');
@@ -63,7 +105,11 @@
         let item = document.createElement('li');
         item.className = 'collection-item';
         let date = new Date(user.timestamp);
+        let btn = createMessageButton('Message', (e) => {
+          displayMessageArea(user.nickname)
+        })
         item.innerHTML = `${user.nickname} spotted at ${user.location}, ${date.toLocaleString().split(",")[1]}`
+        item.appendChild(btn)
         document.querySelector('#user-list').appendChild(item);
       });
       console.log(users);
